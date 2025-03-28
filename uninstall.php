@@ -6,9 +6,9 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
 
 global $wpdb;
 
-$wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}competitions_judoka");
+// $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}competitions_judoka");
 
-$wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}judokas");
+// $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}judokas");
 
 delete_option('judoka_plugin_version');
 
