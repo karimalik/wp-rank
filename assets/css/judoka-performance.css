@@ -1,0 +1,501 @@
+.judoka-list-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.judoka-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 30px;
+    align-items: center;
+}
+
+.judoka-filters select,
+.judoka-filters input {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    min-width: 180px;
+}
+
+.gender-filter {
+    display: flex;
+    gap: 5px;
+}
+
+.gender-btn {
+    padding: 8px 15px;
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.gender-btn.active {
+    background-color: #3a3f78;
+    color: white;
+    border-color: #3a3f78;
+}
+
+.judoka-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.judoka-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+.judoka-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.judoka-card-photo {
+    height: 200px;
+    overflow: hidden;
+}
+
+.judoka-card-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.judoka-card-info {
+    padding: 15px;
+}
+
+.judoka-card-info h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 18px;
+}
+
+.weight-badge, .category-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    margin-right: 5px;
+}
+
+.weight-badge {
+    background-color: #e9f5ff;
+    color: #0075cc;
+}
+
+.category-badge {
+    background-color: #fff3e0;
+    color: #e65100;
+}
+
+.view-details-btn {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 8px 15px;
+    background-color: #3a3f78;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.view-details-btn:hover {
+    background-color: #2d305e;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.7);
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 5% auto;
+    width: 90%;
+    max-width: 1200px;
+    max-height: 90vh;
+    overflow: auto;
+    position: relative;
+    border-radius: 8px;
+}
+
+.close-modal {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #fff;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.judoka-profile-header {
+    color: white;
+    padding: 30px;
+    position: relative;
+}
+
+.profile-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.profile-photo {
+    width: 100px;
+    height: 100px;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.profile-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-details {
+    flex: 1;
+}
+
+.judoka-name {
+    margin: 0 0 10px 0;
+    font-size: 36px;
+    font-weight: bold;
+}
+
+.country-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.flag-icon {
+    width: 24px;
+    height: 16px;
+    object-fit: contain;
+}
+
+.age-info {
+    margin: 5px 0;
+    font-size: 16px;
+}
+
+.weight-display {
+    font-size: 48px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.weight-unit {
+    display: block;
+    font-size: 24px;
+    font-weight: normal;
+    text-align: center;
+}
+
+.profile-tabs {
+    display: flex;
+    margin-top: 20px;
+    border-bottom: 2px solid rgba(255,255,255,0.2);
+}
+
+.tab {
+    padding: 10px 20px;
+    color: white;
+    text-decoration: none;
+    position: relative;
+}
+
+.tab.active:after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: #ff0000;
+}
+
+.profile-content {
+    padding: 30px;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.section-title {
+    margin-bottom: 20px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.section-title h2 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.spotlight-gallery {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    margin-bottom: 30px;
+}
+
+.gallery-item {
+    min-width: 200px;
+    height: 240px;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.gallery-item.large {
+    min-width: 300px;
+    height: 360px;
+}
+
+.photo-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 15px;
+}
+
+.performance-stats {
+    margin-bottom: 30px;
+}
+
+.stat-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: space-between;
+}
+
+.stat-box {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+    min-width: 120px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.stat-value {
+    font-size: 32px;
+    font-weight: bold;
+    color: #3a3f78;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #666;
+}
+
+.competitions-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.competitions-table th {
+    background-color: #f5f5f5;
+    text-align: left;
+    padding: 10px;
+    font-weight: bold;
+}
+
+.competitions-table td {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.medal {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+}
+
+.medal.gold {
+    background-color: #fff9c4;
+    color: #ffa000;
+}
+
+.medal.silver {
+    background-color: #f5f5f5;
+    color: #757575;
+}
+
+.medal.bronze {
+    background-color: #ffe0b2;
+    color: #e65100;
+}
+
+.competitions-filters {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.competitions-filters select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    min-width: 180px;
+}
+
+.judoka-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.judoka-card {
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.judoka-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.judoka-card:hover .view-details-btn {
+    background-color: #2d305e;
+}
+
+.view-details-btn {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 8px 15px;
+    background-color: #3a3f78;
+    color: white;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.judoka-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+    margin-top: 30px;
+}
+
+.judoka-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    background-color: #fff;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.judoka-card-photo {
+    height: 220px;
+    overflow: hidden;
+}
+
+.judoka-card-info {
+    padding: 20px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.judoka-card-info h3 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 18px;
+    color: #333;
+}
+
+.judoka-card-info p {
+    margin: 5px 0;
+    color: #555;
+}
+
+.weight-badge, .category-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    margin-right: 6px;
+    font-weight: 500;
+}
+
+.weight-badge {
+    background-color: #e1f5fe;
+    color: #0288d1;
+}
+
+.category-badge {
+    background-color: #fff8e1;
+    color: #ff8f00;
+}
+
+.judoka-card:hover::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    box-shadow: 0 0 0 3px rgba(58, 63, 120, 0.2);
+    pointer-events: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .profile-info {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .profile-tabs {
+        overflow-x: auto;
+        justify-content: flex-start;
+    }
+    
+    .stat-container {
+        justify-content: center;
+    }
+    
+    .competitions-table {
+        display: block;
+        overflow-x: auto;
+    }
+}
