@@ -51,6 +51,8 @@ class Judoka_Performance_Shortcode
             'judoka_id' => 0,
         ), $atts);
 
+        $atts = array_map('sanitize_text_field', $atts);
+
         $judoka_id = intval($atts['judoka_id']);
 
         if ($judoka_id === 0) {
