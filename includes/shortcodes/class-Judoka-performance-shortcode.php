@@ -49,27 +49,45 @@ class Judoka_Performance_Shortcode
     {
         $atts = shortcode_atts(array(
             'judoka_id' => 0,
+            'per_page' => 8,
         ), $atts);
 
         $atts = array_map('sanitize_text_field', $atts);
 
         $judoka_id = intval($atts['judoka_id']);
+        $per_page = intval($atts['per_page']);
 
         if ($judoka_id === 0) {
-            return $this->render_judokas_list();
+            return $this->render_judokas_list($per_page);
         }
 
         return $this->render_judoka_details($judoka_id);
     }
 
-    private function render_judokas_list()
+    private function render_judokas_list($per_page = 12)
     {
-        $judokas = $this->judoka_model->get_judokas();
+        $current_page = isset($_GET['judo_page']) ? max(1, intval($_GET['judo_page'])) : 1;
+        
+        $filters = [];
+        if (!empty($_GET['category']) && $_GET['category'] !== 'all') {
+            $filters['category'] = sanitize_text_field($_GET['category']);
+        }
+        if (!empty($_GET['club']) && $_GET['club'] !== 'all') {
+            $filters['club'] = sanitize_text_field($_GET['club']);
+        }
+        if (!empty($_GET['gender']) && $_GET['gender'] !== 'all') {
+            $filters['gender'] = sanitize_text_field($_GET['gender']);
+        }
+        
+        $result = $this->judoka_model->get_judokas_paginated($current_page, $per_page, $filters);
+        $judokas = $result['items'];
+        $total_judokas = $result['total'];
+        $total_pages = ceil($total_judokas / $per_page);
 
         $current_page_url = get_permalink();
 
         ob_start();
-        ?>
+?>
         <div class="judoka-list-container">
             <h2>Judoka List</h2>
 
@@ -79,7 +97,8 @@ class Judoka_Performance_Shortcode
                     <?php
                     $categories = $this->judoka_model->get_distinct_categories();
                     foreach ($categories as $category) {
-                        echo '<option value="' . esc_attr($category) . '">' . esc_html($category) . '</option>';
+                        $selected = (isset($_GET['category']) && $_GET['category'] === $category) ? ' selected' : '';
+                        echo '<option value="' . esc_attr($category) . '"' . $selected . '>' . esc_html($category) . '</option>';
                     }
                     ?>
                 </select>
@@ -89,18 +108,23 @@ class Judoka_Performance_Shortcode
                     <?php
                     $clubs = $this->judoka_model->get_distinct_clubs();
                     foreach ($clubs as $club) {
-                        echo '<option value="' . esc_attr($club) . '">' . esc_html($club) . '</option>';
+                        $selected = (isset($_GET['club']) && $_GET['club'] === $club) ? ' selected' : '';
+                        echo '<option value="' . esc_attr($club) . '"' . $selected . '>' . esc_html($club) . '</option>';
                     }
                     ?>
                 </select>
 
                 <div class="gender-filter">
-                    <button class="gender-btn active" data-gender="all">All</button>
-                    <button class="gender-btn" data-gender="M">Men</button>
-                    <button class="gender-btn" data-gender="F">Women</button>
+                    <button class="gender-btn <?php echo (!isset($_GET['gender']) || $_GET['gender'] === 'all') ? 'active' : ''; ?>" data-gender="all">All</button>
+                    <button class="gender-btn <?php echo (isset($_GET['gender']) && $_GET['gender'] === 'M') ? 'active' : ''; ?>" data-gender="M">Men</button>
+                    <button class="gender-btn <?php echo (isset($_GET['gender']) && $_GET['gender'] === 'F') ? 'active' : ''; ?>" data-gender="F">Women</button>
                 </div>
 
                 <input type="text" id="search-judoka" placeholder="Search a judoka">
+                <button id="apply-filters" class="filter-button">Apply Filters</button>
+                <?php if (!empty($filters)): ?>
+                    <a href="<?php echo esc_url($current_page_url); ?>" class="clear-filters-button">Clear Filters</a>
+                <?php endif; ?>
             </div>
 
             <div class="judoka-grid">
@@ -113,7 +137,7 @@ class Judoka_Performance_Shortcode
                         $total_points = $this->competition_model->get_total_points($judoka->id) ?: 0;
 
                         $profile_url = add_query_arg('judoka_id', $judoka->id, $current_page_url);
-                        ?>
+                ?>
                         <a href="<?php echo esc_url($profile_url); ?>" class="judoka-card-link">
                             <div class="judoka-card"
                                 data-id="<?php echo esc_attr($judoka->id); ?>"
@@ -137,20 +161,83 @@ class Judoka_Performance_Shortcode
                                 </div>
                             </div>
                         </a>
-                        <?php
+                <?php
                     }
                 }
                 ?>
             </div>
+            
+            <?php if ($total_pages > 1): ?>
+            <div class="judoka-pagination">
+                <div class="pagination-container">
+                    <?php
+                    $disable_first = $current_page == 1 ? 'disabled' : '';
+                    $disable_prev = $current_page == 1 ? 'disabled' : '';
+                    $disable_next = $current_page == $total_pages ? 'disabled' : '';
+                    $disable_last = $current_page == $total_pages ? 'disabled' : '';
+
+                    $pagination_args = ['judo_page' => 1];
+                    if (!empty($filters['category'])) {
+                        $pagination_args['category'] = $filters['category'];
+                    }
+                    if (!empty($filters['club'])) {
+                        $pagination_args['club'] = $filters['club'];
+                    }
+                    if (!empty($filters['gender'])) {
+                        $pagination_args['gender'] = $filters['gender'];
+                    }
+                    
+                    $first_page_url = add_query_arg($pagination_args, $current_page_url);
+                    
+                    $pagination_args['judo_page'] = max(1, $current_page - 1);
+                    $prev_page_url = add_query_arg($pagination_args, $current_page_url);
+                    
+                    $pagination_args['judo_page'] = min($total_pages, $current_page + 1);
+                    $next_page_url = add_query_arg($pagination_args, $current_page_url);
+                    
+                    $pagination_args['judo_page'] = $total_pages;
+                    $last_page_url = add_query_arg($pagination_args, $current_page_url);
+                    ?>
+                    
+                    <a class="pagination-link <?php echo $disable_first; ?>" href="<?php echo esc_url($first_page_url); ?>">
+                        <span class="screen-reader-text">First page</span>
+                        <span aria-hidden="true">«</span>
+                    </a>
+                    <a class="pagination-link <?php echo $disable_prev; ?>" href="<?php echo esc_url($prev_page_url); ?>">
+                        <span class="screen-reader-text">Previous page</span>
+                        <span aria-hidden="true">‹</span>
+                    </a>
+                    
+                    <span class="pagination-current">
+                        <?php echo $current_page; ?> of <?php echo $total_pages; ?>
+                    </span>
+                    
+                    <a class="pagination-link <?php echo $disable_next; ?>" href="<?php echo esc_url($next_page_url); ?>">
+                        <span class="screen-reader-text">Next page</span>
+                        <span aria-hidden="true">›</span>
+                    </a>
+                    <a class="pagination-link <?php echo $disable_last; ?>" href="<?php echo esc_url($last_page_url); ?>">
+                        <span class="screen-reader-text">Last page</span>
+                        <span aria-hidden="true">»</span>
+                    </a>
+                </div>
+                <div class="pagination-info">
+                    <span class="total-items">
+                        <?php echo $total_judokas; ?> judokas found
+                    </span>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
-        <?php
+    <?php
+
         return ob_get_clean();
     }
 
     public function render_judoka_details($judoka_id)
     {
         $judoka = $this->judoka_model->get_judoka($judoka_id);
-        
+
         if (!$judoka) {
             return '<p>Judoka not found.</p>';
         }
@@ -161,13 +248,13 @@ class Judoka_Performance_Shortcode
 
         $medalStats = array(
             'Gold' => 0,
-            'Sliver' => 0,
+            'Silver' => 0,
             'Bronze' => 0
         );
 
         foreach ($medalsCount as $medal) {
             if (isset($medalStats[$medal->medals])) {
-                $medalStats[$medal->medals]++;
+                $medalStats[$medal->medals] = $medal->count;
             }
         }
 
@@ -176,9 +263,9 @@ class Judoka_Performance_Shortcode
         $age = $birthdate->diff($today)->y;
 
         $photo_url = !empty($judoka->photo_profile) ? $judoka->photo_profile : $this->default_picture;
-        
+
         ob_start();
-        ?>
+    ?>
         <div class="judoka-profile-header" style="background-color: #3a3f78; background-image: linear-gradient(to right, #3a3f78, #2d305e);">
             <div class="profile-info">
                 <div class="profile-photo">
@@ -190,14 +277,14 @@ class Judoka_Performance_Shortcode
                         <img src="<?php echo esc_url($this->default_flag); ?>" alt="Drapeau" class="flag-icon">
                         <span><?php echo esc_html($judoka->club); ?></span>
                     </div>
-                    <p class="age-info">Age: <?php echo esc_html($age); ?> ans</p>
+                    <p class="age-info">Age: <?php echo esc_html((string)$age); ?> ans</p>
                 </div>
                 <div class="weight-display">
-                    -<?php echo esc_html($judoka->weight); ?>
+                    <?php echo esc_html($judoka->weight); ?>
                     <span class="weight-unit">kg</span>
                 </div>
             </div>
-            
+
             <div class="profile-tabs">
                 <a href="#overview" class="tab active">Overview</a>
                 <a href="#photos" class="tab">Photos</a>
@@ -207,13 +294,13 @@ class Judoka_Performance_Shortcode
                 <a href="#wrl" class="tab">WRL</a>
             </div>
         </div>
-        
+
         <div class="profile-content">
             <div id="overview" class="tab-content active">
                 <div class="section-title">
                     <h2>Under the spotlight</h2>
                 </div>
-                
+
                 <div class="spotlight-gallery">
                     <?php
                     $images = !empty($judoka->images) ? json_decode($judoka->images, true) : [];
@@ -222,41 +309,41 @@ class Judoka_Performance_Shortcode
                             echo '<div class="gallery-item"><img src="' . esc_url($image) . '" alt="Photo de ' . esc_attr($judoka->full_name) . '"></div>';
                         }
                     } else {
-                    
+
                         echo '<div class="gallery-item"><img src="' . esc_url($photo_url) . '" alt="Photo de ' . esc_attr($judoka->full_name) . '"></div>';
                     }
                     ?>
                 </div>
-                
+
                 <div class="performance-stats">
                     <div class="stat-container">
                         <div class="stat-box">
                             <div class="stat-value"><?php echo count($competitions); ?></div>
                             <div class="stat-label">Competitions</div>
                         </div>
-                        
+
                         <div class="stat-box">
                             <div class="stat-value"><?php echo $medalStats['Gold']; ?></div>
                             <div class="stat-label">Gold</div>
                         </div>
-                        
+
                         <div class="stat-box">
                             <div class="stat-value"><?php echo $medalStats['Silver']; ?></div>
                             <div class="stat-label">Silver</div>
                         </div>
-                        
+
                         <div class="stat-box">
                             <div class="stat-value"><?php echo $medalStats['Bronze']; ?></div>
                             <div class="stat-label">Bronze</div>
                         </div>
-                        
+
                         <div class="stat-box">
                             <div class="stat-value"><?php echo number_format((float)$totalPoints); ?></div>
                             <div class="stat-label">Points</div>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="recent-competitions">
                     <h3>Recent Competitions</h3>
                     <table class="competitions-table">
@@ -276,7 +363,7 @@ class Judoka_Performance_Shortcode
                             } else {
                                 foreach (array_slice($competitions, 0, 5) as $comp) {
                                     $medal_class = strtolower($comp->medals);
-                                    ?>
+                            ?>
                                     <tr>
                                         <td><?php echo esc_html(date('d/m/Y', strtotime($comp->date_competition))); ?></td>
                                         <td><?php echo esc_html($comp->competition_name); ?></td>
@@ -284,7 +371,7 @@ class Judoka_Performance_Shortcode
                                         <td><span class="medal <?php echo esc_attr($medal_class); ?>"><?php echo esc_html($comp->medals); ?></span></td>
                                         <td><?php echo esc_html($comp->points); ?> pts</td>
                                     </tr>
-                                    <?php
+                            <?php
                                 }
                             }
                             ?>
@@ -292,7 +379,7 @@ class Judoka_Performance_Shortcode
                     </table>
                 </div>
             </div>
-            
+
             <div id="contests" class="tab-content">
                 <h2>Competition history</h2>
                 <div class="competitions-filters">
@@ -309,7 +396,7 @@ class Judoka_Performance_Shortcode
                         }
                         ?>
                     </select>
-                    
+
                     <select id="medal-filter">
                         <option value="all">All medals</option>
                         <option value="Gold">Gold</option>
@@ -318,7 +405,7 @@ class Judoka_Performance_Shortcode
                         <option value="none">No medal</option>
                     </select>
                 </div>
-                
+
                 <table class="competitions-table full-width">
                     <thead>
                         <tr>
@@ -337,7 +424,7 @@ class Judoka_Performance_Shortcode
                             foreach ($competitions as $comp) {
                                 $medal_class = strtolower($comp->medals);
                                 $year = date('Y', strtotime($comp->date_competition));
-                                ?>
+                        ?>
                                 <tr data-year="<?php echo esc_attr($year); ?>" data-medal="<?php echo esc_attr($comp->medals); ?>">
                                     <td><?php echo esc_html(date('d/m/Y', strtotime($comp->date_competition))); ?></td>
                                     <td><?php echo esc_html($comp->competition_name); ?></td>
@@ -345,14 +432,14 @@ class Judoka_Performance_Shortcode
                                     <td><span class="medal <?php echo esc_attr($medal_class); ?>"><?php echo esc_html($comp->medals); ?></span></td>
                                     <td><?php echo esc_html($comp->points); ?> pts</td>
                                 </tr>
-                                <?php
+                        <?php
                             }
                         }
                         ?>
                     </tbody>
                 </table>
             </div>
-            
+
             <div id="photos" class="tab-content">
                 <h2>Photos gallery</h2>
                 <div class="photo-gallery">
@@ -368,20 +455,19 @@ class Judoka_Performance_Shortcode
                     ?>
                 </div>
             </div>
-            
+
             <div id="videos" class="tab-content">
                 <h2>Vidéos</h2>
                 <p>No videos available.</p>
             </div>
-            
+
             <div id="results" class="tab-content">
                 <h2>Detailed results</h2>
                 <p>Detailed result data coming soon.</p>
             </div>
         </div>
-        <?php
+<?php
         return ob_get_clean();
-
     }
 
     public function ajax_get_judoka_details()
@@ -389,7 +475,7 @@ class Judoka_Performance_Shortcode
         check_ajax_referer('judoka_performance_nonce', 'nonce');
 
         $judoka_id = isset($_POST['judoka_id']) ? intval($_POST['judoka_id']) : 0;
-        
+
         if ($judoka_id) {
             $html = $this->render_judoka_details($judoka_id);
             wp_send_json_success(['html' => $html]);

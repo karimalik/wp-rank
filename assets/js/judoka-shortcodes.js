@@ -62,35 +62,31 @@ jQuery(document).ready(function($) {
         clearTimeout(searchTimeout);
         
         searchTimeout = setTimeout(function() {
-            filterTableByName(searchTerm);
+            $('.ranking-row').each(function() {
+                const name = $(this).find('.judoka-name').text().toLowerCase();
+                if (name.includes(searchTerm)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+            
+            checkNoResults();
         }, 300);
     });
     
-    function initWeightCategories() {
-
-        const activeGender = $('.gender-btn.active').data('gender');
-        if (activeGender && activeGender !== 'all') {
-            $('.weight-group').hide();
-            $('.weight-group[data-gender="' + activeGender + '"]').show();
-        }
-    }
-    
-    function filterTableByName(searchTerm) {
-        if (!searchTerm) {
-            $('.ranking-row').show();
-            return;
-        }
+    function checkNoResults() {
+        const visibleRows = $('.ranking-row:visible').length;
         
-        $('.ranking-row').each(function() {
-            const judokaName = $(this).find('.judoka-name').text().toLowerCase();
-            if (judokaName.includes(searchTerm)) {
-                $(this).show();
-            } else {
-                $(this).hide();
+        if (visibleRows === 0) {
+            if ($('.no-visible-results').length === 0) {
+                $('.ranking-body').append('<div class="no-visible-results">No judokas found matching your search criteria.</div>');
             }
-        });
+        } else {
+            $('.no-visible-results').remove();
+        }
     }
-    
+
     function updateRankingTable() {
         $.ajax({
             url: judokaRankingAjax.ajaxurl,
@@ -109,10 +105,17 @@ jQuery(document).ready(function($) {
                     
                     const searchTerm = $('#search-name').val().toLowerCase();
                     if (searchTerm) {
-                        filterTableByName(searchTerm);
+                        $('.ranking-row').each(function() {
+                            const name = $(this).find('.judoka-name').text().toLowerCase();
+                            $(this).toggle(name.includes(searchTerm));
+                        });
+                        
+                        checkNoResults();
                     }
                     
-                    animateRows();
+                    $('.ranking-table').attr('data-view', currentFilters.view);
+                    
+                    $('.ranking-pagination').hide();
                 }
             },
             complete: function() {
@@ -121,64 +124,18 @@ jQuery(document).ready(function($) {
         });
     }
     
-    function animateRows() {
-        $('.ranking-row').each(function(index) {
-            const $row = $(this);
-            $row.css('opacity', 0);
-            
-            setTimeout(function() {
-                $row.animate({
-                    opacity: 1
-                }, 200);
-            }, index * 50);
-        });
-    }
-    
-    animateRows();
-    
-    function handleResponsiveLayout() {
-        if (window.innerWidth <= 992) {
-            if (!$('.mobile-filter-toggle').length) {
-                $('.ranking-sidebar').before('<button class="mobile-filter-toggle">Filtres</button>');
-            }
-        } else {
-            $('.mobile-filter-toggle').remove();
-            $('.ranking-sidebar').show();
-        }
-    }
-    
-    $(document).on('click', '.mobile-filter-toggle', function() {
-        $('.ranking-sidebar').slideToggle(200);
+    $(document).on('click', '.pagination-link:not(.disabled)', function(e) {
+        // Permettre la navigation par défaut (sans AJAX) pour maintenir l'état
+        // La pagination est gérée côté serveur
     });
+
+    $('.ranking-table').attr('data-view', 'simple');
     
-    handleResponsiveLayout();
-    $(window).on('resize', handleResponsiveLayout);
-    
-    const mobileToggleStyle = `
-        .mobile-filter-toggle {
-            display: none;
-            width: 100%;
-            padding: 12px;
-            background: #2563eb;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 500;
-            cursor: pointer;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-        
-        @media (max-width: 992px) {
-            .mobile-filter-toggle {
-                display: block;
-            }
-            
-            .ranking-sidebar {
-                display: none;
-            }
-        }
-    `;
-    
-    $('head').append(`<style>${mobileToggleStyle}</style>`);
+    if ($('.gender-btn.active').data('gender') !== 'all' || 
+        $('.weight-btn.active').length > 0 || 
+        $('#category-filter').val() !== 'all' || 
+        $('#club-filter').val() !== 'all' || 
+        $('#search-name').val().length > 0) {
+        $('.ranking-pagination').hide();
+    }
 });
