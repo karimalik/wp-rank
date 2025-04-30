@@ -51,8 +51,11 @@ class Judoka_Ranking_Shortcode
             'category' => 'all',
             'gender' => 'all',
             'weight' => 'all',
-            'club' => 'all'
+            'club' => 'all',
+            'per_page' => 10,
         ), $atts);
+
+        $current_page = isset($_GET['rank_page']) ? max(1, intval($_GET['rank_page'])) : 1;
 
         ob_start();
 ?>
@@ -65,7 +68,7 @@ class Judoka_Ranking_Shortcode
                 <div class="ranking-table" data-view="simple">
                     <?php
                     $this->render_table_header();
-                    $this->render_table_body($atts);
+                    $this->render_table_body($atts, $current_page, intval($atts['per_page']));
                     ?>
                 </div>
             </div>
@@ -155,20 +158,101 @@ class Judoka_Ranking_Shortcode
     <?php
     }
 
-    private function render_table_body($atts)
+    private function render_table_body($atts, $current_page = 1, $per_page = 10)
     {
-        $judokas = $this->get_ranked_judokas($atts);
+        $all_judokas = $this->get_ranked_judokas($atts);
+        $total_judokas = count($all_judokas);
+        $total_pages = ceil($total_judokas / $per_page);
 
-        if (empty($judokas)) {
+        $start_index = ($current_page - 1) * $per_page;
+
+        $judokas_for_page = array_slice($all_judokas, $start_index, $per_page);
+
+        if (empty($all_judokas)) {
             echo '<div class="no-results">No judokas found matching the criteria.</div>';
             return;
         }
 
         echo '<div class="ranking-body">';
-        foreach ($judokas as $rank => $judoka) {
-            $this->render_judoka_row($judoka, $rank + 1);
+        foreach ($judokas_for_page as $index => $judoka) {
+            $rank = $start_index + $index + 1; // Le rang global
+            $this->render_judoka_row($judoka, $rank);
         }
         echo '</div>';
+
+        $this->render_pagination($total_pages, $current_page, $atts);
+    }
+
+    private function render_pagination($total_pages, $current_page, $atts)
+    {
+        if ($total_pages <= 1) {
+            return;
+        }
+
+        $current_url = get_permalink();
+
+        $params = [];
+        if ($atts['category'] !== 'all') {
+            $params['category'] = $atts['category'];
+        }
+        if ($atts['gender'] !== 'all') {
+            $params['gender'] = $atts['gender'];
+        }
+        if ($atts['weight'] !== 'all') {
+            $params['weight'] = $atts['weight'];
+        }
+        if ($atts['club'] !== 'all') {
+            $params['club'] = $atts['club'];
+        }
+
+        $disable_first = $current_page == 1 ? 'disabled' : '';
+        $disable_prev = $current_page == 1 ? 'disabled' : '';
+        $disable_next = $current_page == $total_pages ? 'disabled' : '';
+        $disable_last = $current_page == $total_pages ? 'disabled' : '';
+        
+        $params['rank_page'] = 1;
+        $first_page_url = add_query_arg($params, $current_url);
+
+        $params['rank_page'] = max(1, $current_page - 1);
+        $prev_page_url = add_query_arg($params, $current_url);
+
+        $params['rank_page'] = min($total_pages, $current_page + 1);
+        $next_page_url = add_query_arg($params, $current_url);
+
+        $params['rank_page'] = $total_pages;
+        $last_page_url = add_query_arg($params, $current_url);
+    ?>
+        <div class="ranking-pagination">
+            <div class="pagination-container">
+                <a class="pagination-link <?php echo $disable_first; ?>" href="<?php echo esc_url($first_page_url); ?>">
+                    <span class="screen-reader-text">First page</span>
+                    <span aria-hidden="true">«</span>
+                </a>
+                <a class="pagination-link <?php echo $disable_prev; ?>" href="<?php echo esc_url($prev_page_url); ?>">
+                    <span class="screen-reader-text">Previous page</span>
+                    <span aria-hidden="true">‹</span>
+                </a>
+
+                <span class="pagination-current">
+                    <?php echo $current_page; ?> of <?php echo $total_pages; ?>
+                </span>
+
+                <a class="pagination-link <?php echo $disable_next; ?>" href="<?php echo esc_url($next_page_url); ?>">
+                    <span class="screen-reader-text">Next page</span>
+                    <span aria-hidden="true">›</span>
+                </a>
+                <a class="pagination-link <?php echo $disable_last; ?>" href="<?php echo esc_url($last_page_url); ?>">
+                    <span class="screen-reader-text">Last page</span>
+                    <span aria-hidden="true">»</span>
+                </a>
+            </div>
+            <div class="pagination-info">
+                <span class="total-items">
+                    <?php echo $total_pages > 0 ? "Displaying " . min($total_pages, $current_page) . " of $total_pages pages" : "No results"; ?>
+                </span>
+            </div>
+        </div>
+    <?php
     }
 
     private function render_judoka_row($judoka, $rank)
